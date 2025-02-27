@@ -1,0 +1,52 @@
+# Name of the GitHub Actions workflow
+name: ci/cd for Node.js Rest-Api
+
+# Trigger this workflow on push events to the main branch and manual dispatch
+on:
+  push: 
+    branches: [main]
+  workflow_dispatch:
+# Permissions needed for this workflow
+permissions:
+  contents: write
+# Define the jobs to be executed
+jobs:
+  # Build job
+  Build:
+    # Use the latest Ubuntu runner
+    runs-on: ubuntu-latest
+    # Steps to be executed in the Build job
+    steps:
+      # Checkout the repository
+      - name: Checkout repository
+        uses: actions/checkout@v3 
+      # Login to DockerHub using secrets for credentials
+      - name: Login to DockerHub
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        run: echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+      # Build Docker image with a specific tag
+      - name: Build Docker Image
+        run: docker build -t bishal5438/rest-api .
+      # Push the built image to DockerHub
+      - name: Push to DockerHub
+        run: docker push bishal5438/rest-api:latest 
+  # Deploy job
+  Deploy:
+    # Use a self-hosted runner for deployment
+    runs-on: self-hosted
+    # Steps to be executed in the Deploy job
+    steps:
+      # Pull the latest Docker image from DockerHub
+      - name: Pull the Docker Image
+        run: docker pull bishal5438/rest-api:latest 
+      # Delete the old container if it exists
+      - name: Delete Old Container
+        run: |
+          if [ "$(docker ps -q -f name=rest-api-Container)" ]; then
+            sudo docker rm -f rest-api-Container
+          fi
+      # Run a new container from the pulled image
+      - name: Run the Container
+        run: docker run -d -p 80:80 --name rest-api-Container bishal5438/rest-api
