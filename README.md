@@ -1,4 +1,6 @@
 # Node.js REST API Deployment with Docker & GitHub Actions
+![alt text](ss/4.png)
+![alt text](ss/1.webp)
 
 This project demonstrates how to build, containerize, and deploy a simple Node.js REST API using Docker and GitHub Actions for CI/CD.
 
